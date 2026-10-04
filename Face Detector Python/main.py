@@ -2,20 +2,16 @@ import cv2
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
-# Membuka webcam (Angka 0 untuk kamera utama)
 cap = cv2.VideoCapture(0)
 
-# Memuat model Haar Cascade dari folder lokal
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
-# Memuat font Ubuntu dari file lokal (.ttf) dengan ukuran 20
 try:
     font_ubuntu = ImageFont.truetype("Ubuntu-Regular.ttf", 20)
 except IOError:
     print("Peringatan: File 'Ubuntu-Regular.ttf' tidak ditemukan di folder! Menggunakan font default.")
     font_ubuntu = ImageFont.load_default()
 
-# Mengecek apakah webcam berhasil dibuka
 if not cap.isOpened():
     print("Error: Tidak dapat mengakses webcam.")
     exit()
@@ -23,17 +19,14 @@ if not cap.isOpened():
 print("Webcam aktif! Tekan tombol 'q' pada keyboard untuk keluar.")
 
 while True:
-    # Membaca frame demi frame dari webcam
     ret, frame = cap.read()
     
     if not ret:
         print("Gagal menerima frame dari webcam.")
         break
 
-    # Mengubah frame video menjadi grayscale untuk deteksi wajah
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # Mendeteksi wajah pada frame
     wajah = face_cascade.detectMultiScale(
         gray,
         scaleFactor=1.1,
@@ -41,48 +34,38 @@ while True:
         minSize=(30, 30)
     )
 
-    # Membuat bounding box dengan padding manual
     for (x, y, w, h) in wajah:
-        padding = 30  # Ukuran padding kotak
+        padding = 30  
         x_new = max(0, x - padding)
         y_new = max(0, y - padding)
         w_new = w + (padding * 2)
         h_new = h + (padding * 2)
 
-        # Menggambar kotak bounding box (Hijau) menggunakan OpenCV
         cv2.rectangle(
             frame,
             (x_new, y_new),
             (x_new + w_new, y_new + h_new),
-            (0, 255, 0),    # Warna BGR (Hijau)
-            2               # Ketebalan garis
+            (0, 255, 0),    
+            2               
         )
 
-    # Konversi frame OpenCV (BGR) ke PIL Image (RGB) agar bisa disisipi font Ubuntu
     img_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     draw = ImageDraw.Draw(img_pil)
 
-    # Menuliskan teks "admin" dengan font Ubuntu di atas setiap kotak wajah
     for (x, y, w, h) in wajah:
         x_new = max(0, x - 30)
         y_new = max(0, y - 30)
         
-        # Posisi teks di atas kiri kotak
         text_position = (x_new, max(0, y_new - 25))
         
-        # Menggambar teks "admin" berwarna hijau (RGB: 0, 255, 0)
         draw.text(text_position, "admin", font=font_ubuntu, fill=(0, 255, 0))
 
-    # Konversi kembali dari PIL Image ke format OpenCV (BGR)
     frame = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
-    # Menampilkan hasil video ke dalam jendela
     cv2.imshow("Deteksi Wajah Real-Time (Font Ubuntu)", frame)
 
-    # Menghentikan program jika tombol 'q' ditekan
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# Melepaskan memori kamera dan menutup semua jendela
 cap.release()
 cv2.destroyAllWindows()
